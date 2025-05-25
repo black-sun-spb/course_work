@@ -1,18 +1,10 @@
-import logging
-import os
-from typing import Any, Dict, List, Optional
-
-import pandas as pd
 import requests
-
 
 def analyze_cards(df: pd.DataFrame) -> Dict[str, int]:
     """
     Анализирует транзакции по картам, суммируя списания по каждой карте.
 
     Параметры:
-        df (pd.DataFrame): DataFrame с транзакциями,
-        должен содержать колонки "Дата операции", "Карта" и "Сумма списания".
 
     Возвращает:
         Dict[str, int]: словарь, где ключ — номер карты, значение — сумма списаний (округленная до целого).
@@ -26,31 +18,22 @@ def analyze_cards(df: pd.DataFrame) -> Dict[str, int]:
         logging.exception("Ошибка при анализе карт: %s", e)
         return {}
 
-
 def get_top_transactions(df: pd.DataFrame, top_n: int = 5) -> List[Dict[str, Any]]:
     """
     Получает топ-N транзакций по сумме списаний.
 
     Параметры:
-        df (pd.DataFrame): DataFrame с транзакциями,
-        должен содержать колонки "Дата операции", "Описание" и "Сумма списания".
         top_n (int): количество топ-транзакций для возврата.
 
     Возвращает:
-        List[Dict[str, Any]]: список словарей с информацией о транзакциях
-        ("Дата операции", "Описание", "Сумма списания").
         В случае ошибки возвращает пустой список.
     """
     try:
         top_df = df[df["Сумма списания"] > 0].sort_values("Сумма списания", ascending=False).head(top_n)
-        records = top_df[["Дата операции", "Описание", "Сумма списания"]].to_dict(orient="records")
-        return [{str(k): v for k, v in row.items()} for row in records]
     except Exception as e:
         logging.exception("Ошибка при получении топ-транзакций: %s", e)
         return []
 
-
-def load_transactions(filepath: Optional[str] = None) -> pd.DataFrame:
     """
     Загружает транзакции из Excel-файла.
     Если путь не указан, по умолчанию использует 'data/operations.xlsx'.
@@ -69,7 +52,6 @@ def load_transactions(filepath: Optional[str] = None) -> pd.DataFrame:
     except Exception as exc:
         logging.exception("Ошибка при загрузке транзакций из файла: %s", exc)
         return pd.DataFrame()
-
 
 def fetch_stock_prices(stocks: List[str]) -> List[Dict[str, Any]]:
     """
@@ -105,7 +87,6 @@ def fetch_stock_prices(stocks: List[str]) -> List[Dict[str, Any]]:
     except Exception as exc:
         logging.exception("Ошибка при получении цен акций: %s", exc)
         return []
-
 
 def fetch_currency_rates(currencies: List[str]) -> List[Dict[str, Any]]:
     """
