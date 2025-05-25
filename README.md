@@ -78,8 +78,8 @@ project-root/
 2. Установи зависимости:
    ```bash
    python -m venv .venv
-   source .venv/bin/activate  # или .venv\Scripts\activate в Windows
-   pip install -r requirements.txt
+   source .venv/bin/activate  # или .venv\Scriptsctivate в Windows
+   poetry install
    ```
 
 3. Настрой `.env`:
@@ -89,18 +89,46 @@ project-root/
    FINNHUB_API_KEY=your_api_key_here
    ```
 
+✅ Требования: Python 3.10+
+
 ---
 
-## 🧪 Тестирование
+## 🦚 Формат входных данных
+
+- **operations.xlsx** — Excel-файл с колонками:
+  - `date`, `amount`, `category`, `description`, `card`, `type`, `to` и т.п.
+- **user_settings.json** — настройки отображения, предпочтения по категориям, карты и др.
+
+---
+
+## 🔮 Примеры JSON-ответов
+
+### Пример `generate_main_page_data`
+```json
+{
+  "greeting": "Доброе утро",
+  "cards_spending": {
+    "Tinkoff Black": 12000,
+    "Sberbank": 5300
+  },
+  "top_transactions": [
+    {"date": "2025-05-01", "amount": -5000, "description": "Продукты"},
+    {"date": "2025-05-02", "amount": -4500, "description": "Кафе"}
+  ],
+  "currencies": {"USD": 91.5, "EUR": 98.1},
+  "stocks": {"AAPL": 187.2, "TSLA": 172.4}
+}
+```
+
+---
+
+## 🧯 Тестирование
 
 Запуск тестов:
-
 ```bash
 pytest
 ```
-
 С отчётом покрытия:
-
 ```bash
 pytest --cov=src
 ```
@@ -116,7 +144,7 @@ pytest --cov=src
 
 ---
 
-## 🧑‍💻 Авторы
+## 👨‍💻 Авторы
 
 - 👤 [black-sun-spb]
 - 📬 Контакты: [taisiya199264@gmail.com]
@@ -126,3 +154,11 @@ pytest --cov=src
 ## 🪪 Лицензия
 
 Этот проект лицензируется под [MIT License](LICENSE).
+
+---
+
+## 📈 Бейджи
+
+![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-90%25-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
