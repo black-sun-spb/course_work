@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 import pandas as pd
+from pandas import DataFrame
 import pytest
 
 from src.reports import expenses_by_category, spending_by_weekday, spending_by_workday
@@ -49,57 +50,36 @@ def test_expenses_by_category_no_data() -> None:
     assert result == []
 
 
-@pytest.fixture
-def sample_transactions() -> pd.DataFrame:
-    data = {
-        "Дата операции": ["2024-01-01", "2024-01-02", "2024-02-15", "2024-03-01", "2024-03-10", "2024-03-20"],
-        "Сумма списания": [100, 200, 150, 300, 250, 400],
-    }
-    df = pd.DataFrame(data)
-    return df
+def test_spending_by_weekday(sample_transactions: DataFrame) -> None:
+    df = pd.DataFrame(sample_transactions)
 
+    result = spending_by_weekday(df, date="2020-02-01")
 
-def test_spending_by_weekday(sample_transactions: pd.DataFrame) -> None:
-    # Используем фиксированную дату для теста
-    result_json = spending_by_weekday(sample_transactions, date="2024-03-20")
-
-    # Проверяем, что результат не пустой и содержит ожидаемые данные
-    import json
-
-    result_data = json.loads(result_json)
-
-    # Проверка наличия данных и правильных колонок
-    assert isinstance(result_data, list)
-    assert len(result_data) > 0
-
-    # Проверка, что есть хотя бы один день недели и сумма положительна
-    for record in result_data:
-        assert "День недели" in record
-        assert "Сумма списания" in record
+    assert isinstance(result, pd.DataFrame)
+    # Можно проверить, что результат не пустой и содержит нужные колонки
+    assert not result.empty
+    assert "День недели" in result.columns
+    assert "Средняя сумма" in result.columns
+    print(result)
 
 
 def test_with_no_data_in_range() -> None:
-    # Дата так выбрана, что фильтр не пропускает транзакции
-    df = pd.DataFrame({"Дата операции": ["2020-01-01"], "Сумма списания": [100]})
+    df = pd.DataFrame({"Дата операции": ["2020-01-01"], "Сумма операции": [100]})
+    result_df = spending_by_weekday(df, date="2020-01-02")
 
-    result_json = spending_by_weekday(df, date="2020-01-02")
-
-    result_df = pd.read_json(result_json)
-
-    # Ожидается пустой DataFrame с нужными колонками или пустой список в JSON
     assert isinstance(result_df, pd.DataFrame)
+    assert result_df.empty
+    assert set(result_df.columns) == {"День недели", "Средняя сумма"}
 
 
 def test_missing_columns() -> None:
     df = pd.DataFrame({"Some column": [1, 2]})
 
-    result_json = spending_by_weekday(df)
+    result_df = spending_by_weekday(df)
 
-    result_df = pd.read_json(result_json)
-
-    # Проверка, что результат — DataFrame и он пустой
     assert isinstance(result_df, pd.DataFrame)
     assert result_df.empty
+    assert set(result_df.columns) == {"День недели", "Средняя сумма"}
 
 
 def test_invalid_date_format() -> None:
@@ -109,19 +89,15 @@ def test_invalid_date_format() -> None:
 
     # Внутри функции попытка преобразовать вызовет ошибку,
     # которая будет поймана и вернёт пустой DataFrame.
-    result_json = spending_by_weekday(df, date="2024/01/01")
-
-    result_df = pd.read_json(result_json)
+    result_df = spending_by_weekday(df, date="2024/01/01")
 
     assert isinstance(result_df, pd.DataFrame)
-
     assert isinstance(result_df, pd.DataFrame)
 
 
 def test_negative_or_zero_spending() -> None:
-    df = pd.DataFrame({"Дата операции": ["2024-02-15"], "Сумма списания": [0]})
-    result_json = spending_by_weekday(df, date="2024-02-15")
-    result_df = pd.read_json(result_json)
+    df = pd.DataFrame({"Дата операции": ["2024-02-15"], "Сумма операции": [0]})
+    result_df = spending_by_weekday(df, date="2024-02-15")
 
     assert isinstance(result_df, pd.DataFrame)
     assert result_df.empty
@@ -129,26 +105,32 @@ def test_negative_or_zero_spending() -> None:
 
 def test_translation_of_days() -> None:
     df = pd.DataFrame(
-        {"Дата операции": ["2024-02-19", "2024-02-20"], "Сумма списания": [50, 60]}  # понедельник  # вторник
+        {
+            "Дата операции": ["2024-05-20", "2024-05-21"],  # понедельник, вторник (предположим, сегодня — 2024-05-25)
+            "Сумма операции": [-50, -60],  # отрицательные — это траты
+        }
     )
 
-    # Проверяем всю таблицу без фильтрации
-    result_json = spending_by_weekday(df)
-    result = pd.read_json(result_json)
-    days_in_result = result["День недели"].tolist()
+    result = spending_by_weekday(df, date="2024-05-25")  # за последние 90 дней
 
+    days_in_result = result["День недели"].tolist()
     expected_days = ["понедельник", "вторник"]
     for day in expected_days:
         assert day in days_in_result
 
 
 def test_single_day() -> None:
-    df = pd.DataFrame({"Дата операции": ["2024-02-19", "2024-02-20"], "Сумма списания": [50, 60]})
+    df = pd.DataFrame({
+        "Дата операции": ["2024-02-20", "2024-02-19"],
+        "Сумма операции": [-100, -200]
+    })
 
-    result_json = spending_by_weekday(df, date="2024-02-20")
-    result = pd.read_json(result_json)
+    result = spending_by_weekday(df, date="2024-02-20")
 
-    assert result["День недели"].iloc[0] == "вторник"
+    assert not result.empty
+    assert "День недели" in result.columns
+    assert "Средняя сумма" in result.columns
+    assert "вторник" in result["День недели"].values
 
 
 def test_with_specific_date() -> None:

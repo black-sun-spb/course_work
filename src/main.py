@@ -4,15 +4,9 @@ main.py — демонстрация всех возможностей прое�
 
 import json
 
-from src.services import (
-    analyze_cashback_categories,
-    investment_bank,
-    search_phone_numbers,
-    search_private_transfers,
-    simple_search,
-)
+from src.services import (analyze_cashback_categories, investment_bank, search_phone_numbers, search_private_transfers,
+                          simple_search)
 from src.views import generate_events_page_data, generate_main_page_data
-
 
 # === Пример входной даты ===
 input_date_str = "2025-05-15 12:00:00"

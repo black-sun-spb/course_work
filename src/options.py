@@ -56,11 +56,7 @@ def fetch_stock_prices(stocks: List[str]) -> List[Dict[str, Any]]:
         result = []
 
         for symbol in stocks:
-            params = {
-                "function": "GLOBAL_QUOTE",
-                "symbol": symbol,
-                "apikey": api_key
-            }
+            params = {"function": "GLOBAL_QUOTE", "symbol": symbol, "apikey": api_key}
             response = requests.get(base_url, params=params)
             if response.status_code != 200:
                 logging.warning("API error for %s: %s", symbol, response.status_code)
@@ -95,7 +91,7 @@ def fetch_stock_prices(stocks: List[str]) -> List[Dict[str, Any]]:
         return []
 
 
-def fetch_currency_rates(currencies: List[str]) -> List[Dict[str, float]]:
+def fetch_currency_rates(currencies: List[str]) -> List[Dict[str, str]]:
     """
     Получает курсы указанных валют по отношению к рублю (RUB)
     через API exchangerate.host (без фактической авторизации).
@@ -110,7 +106,7 @@ def fetch_currency_rates(currencies: List[str]) -> List[Dict[str, float]]:
         params = {
             "base": "RUB",
             "symbols": ",".join(currencies),
-            "api_key": api_key  # Этот параметр игнорируется API, но включен для совместимости
+            "api_key": api_key,  # Этот параметр игнорируется API, но включен для совместимости
         }
 
         response = requests.get(url, params=params)
@@ -121,6 +117,6 @@ def fetch_currency_rates(currencies: List[str]) -> List[Dict[str, float]]:
         rates = response.json().get("rates", {})
         return [{"currency": cur, "rate": round(rates.get(cur, 0), 2)} for cur in currencies]
 
-    except Exception as exc:
-        logging.exception("Ошибка при получении курсов валют:")
+    except Exception as e:
+        logging.exception(f"Ошибка при получении курсов валют: {e}")
         return []

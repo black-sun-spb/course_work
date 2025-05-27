@@ -1,17 +1,12 @@
 import json
 from typing import Any
 
-from src.services import (
-    analyze_cashback_categories,
-    investment_bank,
-    search_phone_numbers,
-    search_private_transfers,
-    simple_search,
-)
+from src.services import (analyze_cashback_categories, investment_bank, search_phone_numbers, search_private_transfers,
+                          simple_search)
 
 
-def test_analyze_cashback_categories_february(sample_transactions: list[dict[str, Any]]) -> None:
-    result_json = analyze_cashback_categories(sample_transactions, 2024, 2)
+def test_analyze_cashback_categories_february(samp_transactions: list[dict[str, Any]]) -> None:
+    result_json = analyze_cashback_categories(samp_transactions, 2024, 2)
     result = json.loads(result_json)
 
     expected = {

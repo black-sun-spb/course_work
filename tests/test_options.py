@@ -1,7 +1,7 @@
 # tests/test_options.py
 
-from unittest.mock import MagicMock, patch
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
@@ -10,7 +10,7 @@ from src import options
 
 # Тесты для analyze_cards
 def test_analyze_cards_normal() -> None:
-    data = {"Дата операции": ["2023-01-01", "2023-01-02"], "Карта": ["1234", "1234"], "Сумма списания": [100.5, 200.4]}
+    data = {"Дата операции": ["2023-01-01", "2023-01-02"], "Номер карты": ["1234", "1234"], "Сумма операции": [100.5, 200.4]}
     df = pd.DataFrame(data)
     result = options.analyze_cards(df)
     assert result == {"1234": 301}
@@ -25,7 +25,7 @@ def test_analyze_cards_with_error() -> None:
 
 # Тесты для get_top_transactions
 def test_get_top_transactions_normal() -> None:
-    data = {"Дата операции": ["2023-01-01", "2023-01-02"], "Описание": ["desc1", "desc2"], "Сумма списания": [50, 150]}
+    data = {"Дата операции": ["2023-01-01", "2023-01-02"], "Описание": ["desc1", "desc2"], "Сумма операции": [50, 150]}
     df = pd.DataFrame(data)
     top = options.get_top_transactions(df, top_n=1)
     assert len(top) == 1
@@ -33,7 +33,7 @@ def test_get_top_transactions_normal() -> None:
 
 
 def test_get_top_transactions_empty() -> None:
-    df = pd.DataFrame({"Сумма списания": []})
+    df = pd.DataFrame({"Сумма операции": []})
     result = options.get_top_transactions(df)
     assert result == []
 
@@ -60,7 +60,12 @@ def test_load_transactions_invalid() -> None:
 def test_fetch_stock_prices_success(mock_get: MagicMock) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"c": 123.45}
+    mock_response.json.return_value = {
+        "Global Quote": {
+            "01. symbol": "AAPL",
+            "05. price": "123.45"
+        }
+    }
 
     mock_get.return_value = mock_response
 
@@ -90,23 +95,19 @@ def test_fetch_currency_rates_success(mock_get: MagicMock) -> None:
     # Мокаем ответ API
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"quote": {"USD": 75.0, "EUR": 90.0}}
+    mock_response.json.return_value = {
+        "success": True,
+        "rates": {"USD": 75.0, "EUR": 90.0}
+    }
     mock_get.return_value = mock_response
 
-    # Мокаем получение API ключа из окружения
     with patch("os.getenv", return_value="fake_api_key"):
-        # Вызов функции и присвоение результата переменной result
         result = options.fetch_currency_rates(["USD", "EUR"])
 
     # Проверка результата
     assert isinstance(result, list)
     assert {"currency": "USD", "rate": 75.0} in result
     assert {"currency": "EUR", "rate": 90.0} in result
-
-
-# Запуск теста вручную (если не используете pytest)
-if __name__ == "__main__":
-    test_fetch_currency_rates_success()
 
 
 @patch("requests.get")

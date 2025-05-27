@@ -13,11 +13,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-def analyze_cashback_categories(
-        transactions_list: List[Dict[str, Any]],
-        year: int,
-        month: int
-) -> str:
+def analyze_cashback_categories(transactions_list: List[Dict[str, Any]], year: int, month: int) -> str:
     """
     Анализирует категории повышенного кешбэка за указанный месяц.
 
@@ -40,18 +36,14 @@ def analyze_cashback_categories(
     df = df.dropna(subset=[date_key])
 
     # Фильтрация по году и месяцу
-    df_filtered = df[
-        (df[date_key].dt.year == year) & (df[date_key].dt.month == month)
-        ]
+    df_filtered = df[(df[date_key].dt.year == year) & (df[date_key].dt.month == month)]
     df_filtered = df_filtered[df_filtered["Сумма списания"] > 0]
 
     # Группировка по категориям
     grouped = df_filtered.groupby("Категория")["Сумма списания"].sum()
 
     cashback_rate = 0.05
-    result: Dict[str, int] = {
-        str(category): round(total * cashback_rate) for category, total in grouped.items()
-    }
+    result: Dict[str, int] = {str(category): round(total * cashback_rate) for category, total in grouped.items()}
 
     return json.dumps(result)
 
